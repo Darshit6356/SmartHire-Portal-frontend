@@ -147,6 +147,23 @@ class ApiService {
   async matchCandidates(jobId) {
     return this.request(`/resume/match/${jobId}`);
   }
+
+  async sendEmail({ from, to, subject, text}) {
+    const res = await fetch(`${this.baseURL}/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from, to, subject, text}),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Email sending failed');
+    }
+
+    return res.json();
+  }
 }
 
 export default new ApiService();

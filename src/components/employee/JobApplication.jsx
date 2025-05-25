@@ -8,6 +8,7 @@ import Input from "../ui/Input";
 import TextArea from "../ui/TextArea";
 import FileUpload from "../ui/FileUpload";
 import Badge from "../ui/Badge";
+import api from "../../services/api";
 
 const JobApplication = ({ job, onBack }) => {
   const { user } = useAuth();
@@ -62,6 +63,18 @@ const JobApplication = ({ job, onBack }) => {
         portfolio: applicationData.portfolio,
       });
 
+      // send follow-up mail
+      const subject = `Following up on your application - ${job.title}`;
+      const text = `Dear ${user.name},
+            Thank you for applying for the ${job.title} position. We wanted to update you on the status of your application.
+            We are currently reviewing all applications and will be in touch within the next 5-6 days with next steps.
+            We appreciate your patience during this process.
+            Best regards,
+            Hiring Manager
+            ${job.company}`;
+      
+      api.sendEmail({ from: user.email, to: user.email, subject, text });
+
       if (result.success) {
         setSuccess(true);
       } else {
@@ -77,7 +90,7 @@ const JobApplication = ({ job, onBack }) => {
 
   const formatSalary = (salary) => {
     if (salary?.min && salary?.max) {
-      return `$${salary.min.toLocaleString()} - $${salary.max.toLocaleString()}`;
+      return `Rs.${salary.min.toLocaleString()} - Rs.${salary.max.toLocaleString()}`;
     }
     return "Salary not specified";
   };

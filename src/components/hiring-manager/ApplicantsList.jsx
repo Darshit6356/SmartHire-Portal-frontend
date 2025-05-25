@@ -7,6 +7,7 @@ import Button from "../ui/Button";
 import Badge from "../ui/Badge";
 import Modal from "../ui/Modal";
 import AIResumeFilter from "./AIResumeFilter";
+import api from "../../services/api";
 
 const ApplicantsList = ({ job, onBack }) => {
   const { user } = useAuth();
@@ -39,6 +40,83 @@ const ApplicantsList = ({ job, onBack }) => {
     }
   };
 
+  // generate mail body template based upon the status
+
+  const getTemplate = (status, candidateName, jobTitle) => {
+    const greetings = `Dear ${candidateName},`;
+    const footer = `
+    Best regards,  
+    Hiring Team
+    ${job.company}`;
+
+      switch (status.toLowerCase()) {
+        case "pending":
+          return `
+                  ${greetings}
+
+                  We have received your application for the position of **${jobTitle}**. Our team will begin reviewing your profile shortly. We appreciate your interest in joining us and will keep you updated on the next steps.
+
+                  ${footer}`;
+        
+        case "shortlisted":
+          return `
+                  ${greetings}
+
+                  Congratulations! You have been shortlisted for the **${jobTitle}** position. We were impressed by your qualifications and experience.
+
+                  Our team will be reaching out to you soon to discuss the next steps in the hiring process.
+
+                  ${footer}`;
+        
+        case "rejected":
+          return `
+            ${greetings}
+
+            Thank you for applying for the **${jobTitle}** role. After careful consideration, we regret to inform you that you have not been selected to proceed further in the hiring process.
+
+            We truly appreciate your interest and encourage you to apply for future opportunities with us.
+
+            ${footer}`;
+        
+        case "hired":
+          return `
+            ${greetings}
+
+            We are thrilled to offer you the **${jobTitle}** position! Your skills and background make you a great fit for our team.
+
+            Our HR department will contact you soon with further details about your offer and onboarding process.
+
+            Welcome aboard!
+
+            ${footer}`;
+        
+        default:
+          return `
+            ${greetings}
+
+            There has been an update regarding your application for the **${jobTitle}** role. Please log in to your candidate portal for more details.
+
+            ${footer}`;
+      }
+    };
+
+
+  const getSubject = (status, jobTitle) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return `Application Received for ${jobTitle}`;
+      case "shortlisted":
+        return `You've Been Shortlisted for ${jobTitle}`;
+      case "rejected":
+        return `Update on Your ${jobTitle} Application`;
+      case "hired":
+        return `Offer for ${jobTitle} - Welcome to the Team!`;
+      default:
+        return `Update Regarding Your ${jobTitle} Application`;
+    }
+  };
+
+  
   const handleStatusUpdate = async (applicationId, newStatus) => {
     setStatusUpdateLoading((prev) => ({ ...prev, [applicationId]: true }));
 
@@ -53,6 +131,13 @@ const ApplicantsList = ({ job, onBack }) => {
         );
 
         const applicant = applications.find((app) => app._id === applicationId);
+
+        // send mail to candidate based upon the status
+        const text = getTemplate(newStatus, applicant.candidateName, job.title);
+        const subject = getSubject(newStatus, job.title);
+
+        await api.sendEmail({ from: user.email, to: applicant.candidateEmail, subject: subject, text: text});
+
         console.log(
           `✅ Status updated to "${newStatus}" and email sent to ${applicant?.candidateEmail}`
         );
@@ -64,20 +149,20 @@ const ApplicantsList = ({ job, onBack }) => {
     }
   };
 
-  const handleAIFilter = async () => {
-    if (!job) return;
+  // const handleAIFilter = async () => {
+  //   if (!job) return;
 
-    setLoading(true);
-    try {
-      const response = await matchCandidates(job._id);
-      setAiResults(response.matches || []);
-      setShowAIFilter(true);
-    } catch (error) {
-      console.error("AI filtering failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   setLoading(true);
+  //   try {
+  //     const response = await matchCandidates(job._id);
+  //     setAiResults(response.matches || []);
+  //     setShowAIFilter(true);
+  //   } catch (error) {
+  //     console.error("AI filtering failed:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -88,8 +173,6 @@ const ApplicantsList = ({ job, onBack }) => {
         return "success";
       case "rejected":
         return "danger";
-      case "reviewed":
-        return "info";
       default:
         return "secondary";
     }
@@ -124,7 +207,7 @@ const ApplicantsList = ({ job, onBack }) => {
           </h2>
         </div>
 
-        {job && (
+        {/* {job && (
           <div className="flex gap-2">
             <Button
               variant="secondary"
@@ -134,7 +217,7 @@ const ApplicantsList = ({ job, onBack }) => {
               🤖 AI Filter Resumes
             </Button>
           </div>
-        )}
+        )} */}
       </div>
 
       {applications.length === 0 ? (
@@ -209,7 +292,6 @@ const ApplicantsList = ({ job, onBack }) => {
                       className="px-3 py-1 border border-gray-300 rounded text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     >
                       <option value="pending">Pending</option>
-                      <option value="reviewed">Reviewed</option>
                       <option value="shortlisted">Shortlisted</option>
                       <option value="rejected">Rejected</option>
                       <option value="hired">Hired</option>

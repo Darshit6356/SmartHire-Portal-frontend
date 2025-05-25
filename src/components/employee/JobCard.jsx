@@ -9,7 +9,7 @@ const JobCard = ({ job, onSelect }) => {
 
   const formatSalary = (salary) => {
     if (salary?.min && salary?.max) {
-      return `$${salary.min.toLocaleString()} - $${salary.max.toLocaleString()}`;
+      return `Rs.${salary.min.toLocaleString()} - Rs.${salary.max.toLocaleString()}`;
     }
     return "Salary not specified";
   };
