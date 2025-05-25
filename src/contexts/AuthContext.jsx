@@ -1,76 +1,106 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import apiService from "../services/api";
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
-}
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for stored auth data on app load
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      setUser(userData)
-      setIsAuthenticated(true)
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const userData = await apiService.getProfile();
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      localStorage.removeItem("token");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false)
-  }, [])
+  };
 
-  const login = (email, password, role) => {
-    // Mock authentication - in real app, this would be an API call
-    const mockUser = {
-      id: Date.now(),
-      email,
-      role,
-      name: email.split("@")[0],
-      profileComplete: role === "employee" ? false : true,
+  const login = async (email, password) => {
+    try {
+      const response = await apiService.login(email, password);
+
+      localStorage.setItem("token", response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+
+      // Redirect based on role
+      if (response.user.role === "jobseeker") {
+        navigate("/employee");
+      } else if (response.user.role === "hrmanager") {
+        navigate("/hiring-manager");
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Login failed:", error);
+      return { success: false, error: error.message };
     }
+  };
 
-    setUser(mockUser)
-    setIsAuthenticated(true)
-    localStorage.setItem("user", JSON.stringify(mockUser))
-    return { success: true }
-  }
+  const signup = async (userData) => {
+    try {
+      const response = await apiService.register(userData);
 
-  const signup = (email, password, role, name) => {
-    // Mock signup - in real app, this would be an API call
-    const mockUser = {
-      id: Date.now(),
-      email,
-      role,
-      name,
-      profileComplete: false,
+      localStorage.setItem("token", response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+
+      // Redirect based on role
+      if (response.user.role === "jobseeker") {
+        navigate("/employee");
+      } else if (response.user.role === "hrmanager") {
+        navigate("/hiring-manager");
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Signup failed:", error);
+      return { success: false, error: error.message };
     }
-
-    setUser(mockUser)
-    setIsAuthenticated(true)
-    localStorage.setItem("user", JSON.stringify(mockUser))
-    return { success: true }
-  }
+  };
 
   const logout = () => {
-    setUser(null)
-    setIsAuthenticated(false)
-    localStorage.removeItem("user")
-  }
+    localStorage.removeItem("token");
+    setUser(null);
+    setIsAuthenticated(false);
+    navigate("/login");
+  };
 
-  const updateProfile = (profileData) => {
-    const updatedUser = { ...user, ...profileData, profileComplete: true }
-    setUser(updatedUser)
-    localStorage.setItem("user", JSON.stringify(updatedUser))
-  }
+  const updateProfile = async (profileData) => {
+    try {
+      const updatedUser = await apiService.updateProfile(profileData);
+      setUser(updatedUser.user);
+      return { success: true };
+    } catch (error) {
+      console.error("Profile update failed:", error);
+      return { success: false, error: error.message };
+    }
+  };
 
   const value = {
     user,
@@ -80,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     updateProfile,
-  }
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

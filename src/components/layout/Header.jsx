@@ -1,13 +1,24 @@
-"use client"
-import { useAuth } from "../../contexts/AuthContext"
-import Button from "../ui/Button"
+"use client";
+import { useAuth } from "../../contexts/AuthContext";
+import Button from "../ui/Button";
 
 const Header = ({ userName, userRole }) => {
-  const { logout } = useAuth()
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    logout()
-  }
+    logout();
+  };
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case "jobseeker":
+        return "Job Seeker";
+      case "hrmanager":
+        return "HR Manager";
+      default:
+        return role;
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
@@ -15,7 +26,7 @@ const Header = ({ userName, userRole }) => {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Agent-AI</h1>
           <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-            {userRole === "employee" ? "Job Seeker" : "Hiring Manager"}
+            {getRoleLabel(userRole)}
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -26,7 +37,7 @@ const Header = ({ userName, userRole }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

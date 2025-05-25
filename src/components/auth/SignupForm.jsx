@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useAuth } from "../../contexts/AuthContext"
-import Button from "../ui/Button"
-import Input from "../ui/Input"
-import Select from "../ui/Select"
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
 
 const SignupForm = () => {
   const [formData, setFormData] = useState({
@@ -12,55 +12,70 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "employee",
-  })
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const { signup } = useAuth()
+    role: "jobseeker",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signup } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return
+      setError("Passwords do not match");
+      return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return
+      setError("Password must be at least 6 characters");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const result = signup(formData.email, formData.password, formData.role, formData.name)
+      const { confirmPassword, ...signupData } = formData;
+      const result = await signup(signupData);
       if (!result.success) {
-        setError("Signup failed")
+        setError(result.error || "Signup failed");
       }
     } catch (err) {
-      setError("Signup failed. Please try again.")
+      setError("Signup failed. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} required />
+        <Input
+          type="text"
+          name="name"
+          placeholder="Full Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div>
-        <Input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+        <Input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div>
@@ -91,19 +106,23 @@ const SignupForm = () => {
           value={formData.role}
           onChange={handleChange}
           options={[
-            { value: "employee", label: "Job Seeker" },
-            { value: "hiring-manager", label: "Hiring Manager" },
+            { value: "jobseeker", label: "Job Seeker" },
+            { value: "hrmanager", label: "HR Manager" },
           ]}
         />
       </div>
 
-      {error && <div className="text-red-600 text-sm mt-2 p-3 bg-red-50 border border-red-200 rounded-md">{error}</div>}
+      {error && (
+        <div className="text-red-600 text-sm mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+          {error}
+        </div>
+      )}
 
       <Button type="submit" loading={loading} className="w-full mt-4">
         Sign Up
       </Button>
     </form>
-  )
-}
+  );
+};
 
-export default SignupForm
+export default SignupForm;

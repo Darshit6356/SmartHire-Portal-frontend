@@ -1,44 +1,65 @@
-"use client"
-import Button from "../ui/Button"
-import Badge from "../ui/Badge"
+"use client";
+import Button from "../ui/Button";
+import Badge from "../ui/Badge";
 
 const JobPostCard = ({ job, onSelect }) => {
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString()
-  }
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatSalary = (salary) => {
+    if (salary?.min && salary?.max) {
+      return `$${salary.min.toLocaleString()} - $${salary.max.toLocaleString()}`;
+    }
+    return "Salary not specified";
+  };
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          {job.title}
+        </h3>
         <p className="text-gray-600 font-medium">{job.company}</p>
       </div>
 
       <div className="mb-4 space-y-1">
         <p className="text-sm text-gray-600">{job.location}</p>
-        <p className="text-sm font-medium text-gray-900">{job.salary}</p>
-        <p className="text-xs text-gray-500">Posted: {formatDate(job.postedDate)}</p>
+        <p className="text-sm font-medium text-gray-900">
+          {formatSalary(job.salary)}
+        </p>
+        <p className="text-xs text-gray-500">
+          Posted: {formatDate(job.createdAt)}
+        </p>
       </div>
 
       <div className="mb-4 p-4 bg-gray-50 rounded-md text-center">
-        <div className="text-2xl font-bold text-blue-600">{job.applicants?.length || 0}</div>
-        <div className="text-xs text-gray-500 uppercase font-medium">Applicants</div>
+        <div className="text-2xl font-bold text-blue-600">
+          {job.applicationsCount || 0}
+        </div>
+        <div className="text-xs text-gray-500 uppercase font-medium">
+          Applicants
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {job.skills.slice(0, 3).map((skill) => (
+        {job.skills?.slice(0, 3).map((skill) => (
           <Badge key={skill} variant="secondary">
             {skill}
           </Badge>
         ))}
-        {job.skills.length > 3 && <span className="text-xs text-gray-500">+{job.skills.length - 3} more</span>}
+        {job.skills?.length > 3 && (
+          <span className="text-xs text-gray-500">
+            +{job.skills.length - 3} more
+          </span>
+        )}
       </div>
 
       <div className="flex justify-end">
         <Button onClick={onSelect}>View Applicants</Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default JobPostCard
+export default JobPostCard;
