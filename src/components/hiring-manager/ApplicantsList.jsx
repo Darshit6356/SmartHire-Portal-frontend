@@ -138,9 +138,9 @@ const ApplicantsList = ({ job, onBack }) => {
 
         await api.sendEmail({ from: user.email, to: applicant.candidateEmail, subject: subject, text: text});
 
-        console.log(
-          `✅ Status updated to "${newStatus}" and email sent to ${applicant?.candidateEmail}`
-        );
+        // console.log(
+        //   `Status updated to "${newStatus}" and email sent to ${applicant?.candidateEmail}`
+        // );
       }
     } catch (error) {
       console.error("Failed to update status:", error);
