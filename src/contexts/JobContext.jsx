@@ -40,6 +40,7 @@ export const JobProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await apiService.getMyApplications();
+      // console.log("🔍 API response:", response);
       setApplications(response.applications || []);
       return response;
     } catch (error) {

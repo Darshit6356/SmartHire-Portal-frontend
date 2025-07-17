@@ -104,9 +104,10 @@ class ApiService {
 
   async getMyApplications(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(
+    const res=await this.request(
       `/applications/my${queryString ? `?${queryString}` : ""}`
     );
+    return res?.data || res;
   }
 
   async getJobApplications(jobId, params = {}) {
